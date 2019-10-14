@@ -12,7 +12,7 @@ The solution requires to have the VMs enrolled to a Log Analytics workspace and 
 https://docs.microsoft.com/en-us/azure/azure-monitor/log-query/logs-structure
 
 <h3>CPU High</h3>
-```powershell
+```
 let get_rg = (s:string)
 {
 split((s), "/", 4)
@@ -29,7 +29,7 @@ Perf
 | summarize AggregatedValue = avg(CounterValue) by tostring(sub), tostring(rg), bin(TimeGenerated, 5m), Computer
 ```
 <h3>Low Memory</h3>
-```powershell
+```
 let get_rg = (s:string)
 {
 split((s), "/", 4)
@@ -47,7 +47,7 @@ Perf
 ```
 
 <h3>Low Disk Space</h3>
-```powershell
+```
 let get_rg = (s:string)
 {
 split((s), "/", 4)
@@ -68,7 +68,7 @@ Perf
 ```
 
 <h3>VM Down</h3>
-```powershell
+```
 let utc_to_us_date_format = (t:datetime)
 {
 strcat(getmonth(t), "/", dayofmonth(t),"/", getyear(t), " ",
