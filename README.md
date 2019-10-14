@@ -32,7 +32,6 @@ Perf
 ```
 <img src="https://storagegomez.blob.core.windows.net/public/images/cpuhigh.png"/>
 
-
 <h3>Low Memory</h3>
 
 ```
@@ -51,6 +50,7 @@ Perf
 | where sub == '<subscriptionid>' and rg == '<resourcegroup>'
 | summarize AggregatedValue = avg(CounterValue) by tostring(sub), tostring(rg), bin(TimeGenerated, 5m), Computer
 ```
+<img src="https://storagegomez.blob.core.windows.net/public/images/memlow.png"/>
 
 <h3>Low Disk Space</h3>
 
@@ -73,6 +73,7 @@ Perf
 | extend Drive = strcat(Computer, ' - ', InstanceName)
 | summarize AggregatedValue = avg(CounterValue) by Drive, bin(TimeGenerated, 5m)
 ```
+<img src="https://storagegomez.blob.core.windows.net/public/images/disklow.png"/>
 
 <h3>VM Down</h3>
 
@@ -92,3 +93,4 @@ Heartbeat
 | extend HostName = strcat(Computer, ' - Last Heartbeat: ', localtimestamp)
 | summarize AggregatedValue = count() by HostName, TimeGenerated
 ```
+<img src="https://storagegomez.blob.core.windows.net/public/images/vmdown.png"/>
