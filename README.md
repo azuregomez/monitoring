@@ -11,7 +11,7 @@ This repository provides a solution for the followin scenario: A company wants t
 The solution requires to have the VMs enrolled to a Log Analytics workspace and leverages the query capabilities of Azure Monitor Logs (aka Log Analytics).
 https://docs.microsoft.com/en-us/azure/azure-monitor/log-query/logs-structure
 
-CPU High
+<h3>CPU High</h3>
 
 let get_rg = (s:string)
 {
