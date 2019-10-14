@@ -12,7 +12,7 @@ The solution requires to have the VMs enrolled to a Log Analytics workspace and 
 https://docs.microsoft.com/en-us/azure/azure-monitor/log-query/logs-structure
 
 <h3>CPU High</h3>
-
+```powershell
 let get_rg = (s:string)
 {
 split((s), "/", 4)
@@ -25,5 +25,62 @@ Perf
 | extend rg = get_rg(_ResourceId)[0]
 | extend sub = get_sub(_ResourceId)[0]
 | where ObjectName == 'Processor' and CounterName == '% Processor Time'
-| where sub == "f05bd3e7-fe83-40ae-9dec-7f146792b60d" and rg == 'panpoc-rg'
+| where sub == '<subscriptionid>' and rg == '<resourcegroup>'
 | summarize AggregatedValue = avg(CounterValue) by tostring(sub), tostring(rg), bin(TimeGenerated, 5m), Computer
+```
+<h3>Low Memory</h3>
+```powershell
+let get_rg = (s:string)
+{
+split((s), "/", 4)
+};
+let get_sub = (s:string)
+{
+split((s), "/", 2)
+};
+Perf
+| extend rg = get_rg(_ResourceId)[0]
+| extend sub = get_sub(_ResourceId)[0]
+| where ObjectName == 'Memory' and CounterName == 'Available MBytes' 
+| where sub == '<subscriptionid>' and rg == '<resourcegroup>'
+| summarize AggregatedValue = avg(CounterValue) by tostring(sub), tostring(rg), bin(TimeGenerated, 5m), Computer
+```
+
+<h3>Low Disk Space</h3>
+```powershell
+let get_rg = (s:string)
+{
+split((s), "/", 4)
+};
+let get_sub = (s:string)
+{
+split((s), "/", 2)
+};
+Perf
+| extend rg = get_rg(_ResourceId)[0]
+| extend sub = get_sub(_ResourceId)[0]
+| where ObjectName == "LogicalDisk" or ObjectName == "Logical Disk"
+| where CounterName == "% Free Space"
+| where InstanceName <> "_Total"
+| where sub == '<subscriptionid>' and rg == '<resourcegroup>'
+| extend Drive = strcat(Computer, ' - ', InstanceName)
+| summarize AggregatedValue = avg(CounterValue) by Drive, bin(TimeGenerated, 5m)
+```
+
+<h3>VM Down</h3>
+```powershell
+let utc_to_us_date_format = (t:datetime)
+{
+strcat(getmonth(t), "/", dayofmonth(t),"/", getyear(t), " ",
+bin((t-1h)%12h+1h,1s), iff(t%24h<12h, " AM UTC", " PM UTC"))
+};
+Heartbeat
+| where TimeGenerated < now()
+| where SubscriptionId == '<subscriptionid>' and ResourceGroup == '<resourcegroup>'
+| summarize TimeGenerated=max(TimeGenerated) by Computer
+| where TimeGenerated < ago(5m)
+| project TimeGenerated, Computer
+| extend localtimestamp = utc_to_us_date_format(TimeGenerated)
+| extend HostName = strcat(Computer, ' - Last Heartbeat: ', localtimestamp)
+| summarize AggregatedValue = count() by HostName, TimeGenerated
+```
