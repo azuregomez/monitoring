@@ -1,4 +1,4 @@
-<h2>Basic Monitoring for Azure VMs<h2>
+<h2>Basic Monitoring for Azure VMs</h2>
 Azure Monitor provides many "out of the box" metrics that youy can use to monitor your VMs. However, when the requirements get more specific, we often have to use Kusto Queries.
 <h2>Business Case</h2>
 This repository provides a solution for the followin scenario: A company wants to use Azure Monitor and alerts for the following events:
