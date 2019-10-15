@@ -9,6 +9,7 @@ This repository provides a solution for the following scenario: A company wants 
 <li>Alert when a VM has low disk space. Less that 10% Available.  Filtered by Subscription and Resource Group.
 <li>Alert when a VM is down, the agent is not reporting, or is generally unhealthy for a period of 5 minutes.  Filtered by Subscription and Resource Group.
 </ol>
+The alerts must exclude a list of VMs that are under a maintenance window.  For this purpose, we will have a list of VM Names in a blob with 1 VM Name per line.  The blob is mainenance.txt.
 The solution requires to have the VMs enrolled to a Log Analytics workspace and leverages the query capabilities of Azure Monitor Logs (aka Log Analytics). <br/>
 https://docs.microsoft.com/en-us/azure/azure-monitor/log-query/logs-structure
 
@@ -28,6 +29,7 @@ Perf
 | extend sub = get_sub(_ResourceId)[0]
 | where ObjectName == 'Processor' and CounterName == '% Processor Time'
 | where sub == '<subscriptionid>' and rg == '<resourcegroup>'
+| where Computer !in (externaldata(vmname:string) [@"https://storagegomez.blob.core.windows.net/public/maintenance.txt"])
 | summarize AggregatedValue = avg(CounterValue) by tostring(sub), tostring(rg), bin(TimeGenerated, 5m), Computer
 ```
 <img src="https://storagegomez.blob.core.windows.net/public/images/cpuhigh.png"/>
@@ -48,6 +50,7 @@ Perf
 | extend sub = get_sub(_ResourceId)[0]
 | where ObjectName == 'Memory' and CounterName == 'Available MBytes' 
 | where sub == '<subscriptionid>' and rg == '<resourcegroup>'
+| where Computer !in (externaldata(vmname:string) [@"https://storagegomez.blob.core.windows.net/public/maintenance.txt"])
 | summarize AggregatedValue = avg(CounterValue) by tostring(sub), tostring(rg), bin(TimeGenerated, 5m), Computer
 ```
 <img src="https://storagegomez.blob.core.windows.net/public/images/memlow.png"/>
@@ -70,6 +73,7 @@ Perf
 | where CounterName == "% Free Space"
 | where InstanceName <> "_Total"
 | where sub == '<subscriptionid>' and rg == '<resourcegroup>'
+| where Computer !in (externaldata(vmname:string) [@"https://storagegomez.blob.core.windows.net/public/maintenance.txt"])
 | extend Drive = strcat(Computer, ' - ', InstanceName)
 | summarize AggregatedValue = avg(CounterValue) by Drive, bin(TimeGenerated, 5m)
 ```
@@ -86,6 +90,7 @@ bin((t-1h)%12h+1h,1s), iff(t%24h<12h, " AM UTC", " PM UTC"))
 Heartbeat
 | where TimeGenerated < now()
 | where SubscriptionId == '<subscriptionid>' and ResourceGroup == '<resourcegroup>'
+| where Computer !in (externaldata(vmname:string) [@"https://storagegomez.blob.core.windows.net/public/maintenance.txt"])
 | summarize TimeGenerated=max(TimeGenerated) by Computer
 | where TimeGenerated < ago(5m)
 | project TimeGenerated, Computer
