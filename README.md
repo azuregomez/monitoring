@@ -13,7 +13,7 @@ The alerts must exclude a list of VMs that are under a maintenance window.  For 
 The solution requires to have the VMs enrolled to a Log Analytics workspace and leverages the query capabilities of Azure Monitor Logs (aka Log Analytics). <br/>
 https://docs.microsoft.com/en-us/azure/azure-monitor/log-query/logs-structure
 
-<h4>Pre-requisites</h4>
+<h3>Pre-requisites</h3>
 <ul>
 <li>An Azure Monitor Logs (formerly known as Log Analytics) Workspace
 <li>All VMs that will be monitored have to be enrolled in the Workspace
