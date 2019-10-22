@@ -17,8 +17,8 @@ https://docs.microsoft.com/en-us/azure/azure-monitor/log-query/logs-structure
 <ul>
 <li>An Azure Monitor Logs (formerly known as Log Analytics) Workspace
 <li>All VMs that will be monitored have to be enrolled in the Workspace
-<ul>
-<h4>Implementation</h4>
+</ul>
+<h3>Implementation</h3>
 Go to Azure Monitor > Alerts<br/>
 For each Alert:
 <ol>
