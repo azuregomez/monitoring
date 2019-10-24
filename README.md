@@ -37,16 +37,16 @@ In addition to having scheduled maintenance, it is desirable to be able to put a
 <table>
 <tr><td>maintenance.psm1</td><td>Powershell module to be uploaded to your Azure Automation Account. This code is used by the Automation runbook</td></tr>
 <tr><td>maintondemand.ps1</td><td>Automation runbook to be uploaded and scheduled every hour at the 50 min offset. Workspace Id and Shared Key need to be updated with your Log Analytics info.</td></tr>
-<tr><td>Log Analytics Alerts</td><td>The code for the queries is provided below in the below section Alert Implementation with Kusto Queries. The subscription id and resource group need to be updated with your values.</td></tr>
+<tr><td>Log Analytics Alerts</td><td>The code for the queries is provided below in the section Alert Implementation with Kusto Queries. The subscription id and resource group need to be updated with your values.</td></tr>
 </table>
 <h3>Limitations</h3>
 <ul>
-<li>The solution works as long as every VM in the organization has a different name.  Good naming standards are a best practice.  Any collision with VM names would adversely affect this implementation.  A potential solution to this issue is to use resourceId instead od VM Name
-<li>The 'maintenance' tag requires the use of UTC. This is for code simplification and teh fact that Log Analytics uses UTC times. Azure runs in UTC.
+<li>The solution works as long as every VM in the organization has a different name.  Good naming standards are a best practice.  Any collision with VM names would adversely affect this implementation.  A potential solution to this issue is to use resourceId instead of VM Name
+<li>The 'maintenance' tag requires the use of UTC. This is for code simplification and the fact that Log Analytics uses UTC times. Azure runs in UTC so your Azure operations should too.
 </ul>
 <h3>Pre-requisites</h3>
 <ul>
-<li>An Azure Monitor Logs (formerly known as Log Analytics) Workspace.
+<li>A Log Analytics Workspace.
 <li>All VMs that will be monitored have to be enrolled in the Workspace
 </ul>
 <h3>Alert Implementation with Kusto Queries</h3>
