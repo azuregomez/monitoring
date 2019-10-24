@@ -49,6 +49,7 @@ In addition to having scheduled maintenance, it is desirable to be able to put a
 <li>A Log Analytics Workspace.
 <li>All VMs that will be monitored have to be enrolled in the Workspace
 </ul>
+<hr>
 <h3>Alert Implementation with Kusto Queries</h3>
 Go to Azure Monitor > Alerts<br/>
 For each Alert:
