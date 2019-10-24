@@ -1,6 +1,6 @@
 <h2>Custom Monitoring for Azure VMs with Azure Monitor Logs</h2>
 Azure Monitor provides many "out of the box" metrics that you can use to monitor your VMs. However, when the requirements get more specific, we often have to use Kusto Queries.
-<h2>Business Case</h2>
+<h3>Business Case</h3>
 This repository provides a solution for the following scenario: <br/>
 A company wants to use Azure Monitor and alerts for the following events:
 <ol>
