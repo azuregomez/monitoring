@@ -22,17 +22,17 @@ The maintenance window is specified in VM tag 'maintenance' with the format "zz-
 <tr><td>Z</td><td>Not used for alerting purpose</td></tr>
 </table>
 This way, a VM with scheduled maintenance every 2nd Tuesday of the month from 10PM to 11:30PM, would have the 'maintenance' tag value "zz-2tue-1000-1130-w"<br/>
-ALL TIMES TIMES ARE ARE IN UTC. <br/>
-In addition to having scheduled maintenance, it is desirable to be able to put a VM under maintenance alert excemption on demand. This way any VM can be temporarily removed from the alerts at any time for an indefinite period of time.
+ALL TIMES TIMES ARE IN UTC. <br/>
+In addition to having scheduled maintenance, it is desirable to be able to put a VM under maintenance alert excemption on demand. This way any VM can be temporarily removed from the alerts at any time for an indefinite period of time (not implemented in the solution yet).
 <h3>Solution</h3>
 <ol>
 <li>Azure Automation Runbook scheduled to run every hour to:
 <ul>
-<li>Query VM Tag "maintenance" and determine the list of VMs that will be in maintenence in the next hour. The runbook will run 10 minutes before each hour (0:50, 1:50, 2:50) and will run 10 minutes ahead for determining maintenance VMs. This way it will scoop the right VMs in the right maintenance window and allow 10 minutes for Az Automation job queuing, job completion, and Log Analytics record ingestion.  The end result will be that alerts will stop just a few minutes before the actial maintenance.
+<li>Query VM Tag "maintenance" and determine the list of VMs that will be in maintenence in the next hour. The runbook will run 10 minutes before each hour (0:50, 1:50, 2:50) and will run 10 minutes ahead for determining maintenance VMs. This way it will scoop the right VMs in the right maintenance window and allow 10 minutes for Az Automation job queuing, job completion, and Log Analytics record ingestion.  The end result will be that alerts will stop just a few minutes before the actual maintenance time.
 <li>Send the list of VMs to a Custom Table in Log Analytics. The table is named MaintenanceVM_CL.
 </ul>
 <li>Kusto queries for alerts joining the MaintenanceVM_CL custom table on Computer, taking into account the new maintenance records for the last hour so those VMs can be excluded from the query results.  
-<ol>
+</ol>
 <h3>Solution Components</h3>
 <table>
 <tr><td>maintenance.psm1</td><td>Powershell module to be uploaded to your Azure Automation Account. This code is used by the Automation runbook</td></tr>
