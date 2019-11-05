@@ -83,15 +83,21 @@ function Assert-AzVmInMaintenance{
         [Parameter(Mandatory=$false)][datetime]$thedate        
     )
     if(!($thedate)){
-        # getting current date in UTC as testing date
+        # getting current date in UTC as evaluation date
         $thedate = (Get-Date).ToUniversalTime()
     }
     if(!($processoffset)){
+        # evaluating 10 minutes before the actual time, as a cushion time for Autmation, Log Analytics
         $processoffset = 10
     }
+    # pretending is offset minutes later
     $thedate = $thedate.AddMinutes($processoffset)
+    # splitting the 
     $parts = $mtnstr.split("-")
-    $strday = $parts[1].Substring(1,3)
+    if($parts.Length -lt 4){
+        throw "Invalid Maintenance Tag: $mtnstr"        
+    }    
+    $strday = $parts[1].Substring(1,3)    
     # configured maintenance: day, index, year and month:
     $day = Convert-DayToNumber($strday)
     $nday = [int]($parts[1].Substring(0,1))
@@ -102,7 +108,7 @@ function Assert-AzVmInMaintenance{
     $mday = (get-weekdayinmonth $month $year $nday $day)
     # is today maintenance day?
     if($mday.day -eq $thedate.Day){
-        # it is maintenace day!           
+        # it is maintenace day!               
         $strfrom = $parts[2]
         $strto = $parts[3]
         $fromhour = [int]$strfrom.Substring(0,2)
@@ -110,16 +116,20 @@ function Assert-AzVmInMaintenance{
         $tohour = [int]$strto.Substring(0,2)
         $tomin = [int]$strto.Substring(2,2)        
         # is it after the start of scheduled maintenance?
-        if(($thedate.Hour -gt $fromhour) -or ($thedate.Hour -eq $fromhour -and $thedate.Minute -ge $frommin)){            
+        if(($thedate.Hour -gt $fromhour) -or ($thedate.Hour -eq $fromhour -and $thedate.Minute -ge $frommin)){                
             # is it also before the end of scheduled maintenance?
             if(($thedate.Hour -lt $tohour) -or ($thedate.Hour -eq $tohour -and $thedate.Minute -le $tomin)){                
-                #it is maintenance time!
-                return $true
+                #it is maintenance time!                                
+                $window = new-object psobject -property @{ 
+                    "StartDtm" = Get-Date -Year $year -Month $month -Day $mday.day -Hour $fromhour -Minute $frommin
+                    "EndDtm"= Get-Date -Year $year -Month $month -Day $mday.day -Hour $tohour -Minute $tomin
+                }  
+                return $window
             }
         }
     }        
     # it is not maintenance time
-    return $false
+    return $null
 }
 
 function Publish-AzVmMaintenance([string] $tagValue){
@@ -127,12 +137,15 @@ function Publish-AzVmMaintenance([string] $tagValue){
     $datenow = (Get-Date).ToUniversalTime()
     $vms = @()
     Get-AzVmTagValue $tagValue | foreach-object {  
-        if(Assert-AzVmInMaintenance($_.TagValue)){ 
+        $window = Assert-AzVmInMaintenance($_.TagValue)
+        if($null -ne $window){ 
             $vm = new-object psobject -property @{ 
                 "Computer" = $_.VmName  
                 "DateValue"= $datenow
                 "TagValue" = $_.TagValue
-                "MaintenanceType" = "scheduled"            
+                "MaintenanceType" = "scheduled"   
+                "StartTime" = $window.StartDtm
+                "EndTime" = $window.EndDtm
             }  
             $vms+=$vm
             $count += 1
@@ -145,34 +158,21 @@ function Publish-AzVmMaintenance([string] $tagValue){
     return $count
 }
 
-function Add-AzVmMaintenance([string] $vmname){
+# Add a VM to  ondemand maintenance 
+function Add-AzVmMaintenance([string] $vmname, [DateTime]$start, [DateTime]$end){
     $datenow = (Get-Date).ToUniversalTime()
     $vm = new-object psobject -property @{ 
         "Computer" = $vmname  
         "DateValue"= $datenow        
-        "MaintenanceType" = "ondemand"            
+        "MaintenanceType" = "ondemand"     
+        "StartTime" = $start
+        "EndTime" = $end      
     }  
     $json = $vm | ConvertTo-Json
     Add-AzMonLogData $json "MaintenanceVM" "DateValue"
+    
 }
 
-#EndRegion
-
-#Region Blobs
-function Update-BlobFromArray([string]$storageaccountname, [string]$key, [string]$container, [string]$blobname,[string[]]$lines){
-    $text=""    
-    foreach($line in $lines){
-        $text+=($line+"`r`n");        
-    }
-    Update-BlobFromText $storageaccountname $key $container $blobname $text
-}
-
-function Update-BlobFromText([string]$storageaccountname, [string]$key, [string]$container,[string]$blobname, [string]$text){
-    write-host "key=" $key
-    $text | out-file "temp" -force    
-    $ctx = new-azstoragecontext -storageaccountname $storageaccountname -storageaccountkey $key
-    Set-AzStorageBlobContent -file "temp" -container $container -blob $blobname -context $ctx -force
-}
 #EndRegion
 
 #Region AzMonLogs
@@ -227,8 +227,6 @@ Function Add-AzMonLogData($json, $logType, $TimeStampField)
 
 export-modulemember -function Add-AzMonLogData 
 export-modulemember -function Add-AzMonLogEntry
-export-modulemember -function Update-BlobFromText
-export-modulemember -function Update-BlobFromArray
 export-modulemember -function Assert-AzVmInMaintenance
 export-modulemember -function Get-AzVmTagValue
 export-modulemember -function Show-Param

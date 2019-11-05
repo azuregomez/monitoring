@@ -36,7 +36,8 @@ In addition to having scheduled maintenance, it is desirable to be able to put a
 <h3>Solution Components</h3>
 <table>
 <tr><td>maintenance.psm1</td><td>Powershell module to be uploaded to your Azure Automation Account. This code is used by the Automation runbook</td></tr>
-<tr><td>maintondemand.ps1</td><td>Automation runbook to be uploaded and scheduled every hour at the 50 min offset. Workspace Id and Shared Key need to be updated with your Log Analytics info.</td></tr>
+<tr><td>maintschedule.ps1</td><td>Automation runbook to be uploaded and scheduled every hour at the 50 min offset. Workspace Id and Shared Key need to be updated with your Log Analytics info.</td></tr>
+<tr><td>maintondemand.ps1</td><td>Automation runbook to be uploaded and triggered through a Web Hook with VM Name, StartDtm and EndDtm. Workspace Id and Shared Key need to be updated with your Log Analytics info.</td></tr>
 <tr><td>Log Analytics Alerts</td><td>The code for the queries is provided below in the section Alert Implementation with Kusto Queries. The subscription id and resource group need to be updated with your values.</td></tr>
 </table>
 <h3>Limitations</h3>
@@ -85,7 +86,7 @@ Perf
 | summarize AggregatedValue = avg(CounterValue) by tostring(sub), tostring(rg), bin(TimeGenerated, 5m), Computer
 | join kind= leftouter(
     MaintenanceVM_CL 
-    | where TimeGenerated >= now(-1h) 
+    | where now() >= StartTime_t and now() <= EndTime_t
 ) on Computer
 | where MaintenanceType_s == ""
 
@@ -112,7 +113,7 @@ Perf
 | summarize AggregatedValue = avg(CounterValue) by tostring(sub), tostring(rg), bin(TimeGenerated, 5m), Computer
 | join kind= leftouter(
     MaintenanceVM_CL 
-    | where TimeGenerated >= now(-1h) 
+    | where now() >= StartTime_t and now() <= EndTime_t
 ) on Computer
 | where MaintenanceType_s == ""
 
@@ -142,7 +143,7 @@ Perf
 | summarize AggregatedValue = avg(CounterValue) by Computer, Drive, bin(TimeGenerated, 5m)
 | join kind= leftouter(
     MaintenanceVM_CL 
-    | where TimeGenerated >= now(-1h) 
+    | where now() >= StartTime_t and now() <= EndTime_t
 ) on Computer
 | where MaintenanceType_s == ""
 
@@ -168,7 +169,7 @@ Heartbeat
 | where TimeGenerated < ago(5m)
 | join kind= leftouter(
     MaintenanceVM_CL 
-    | where TimeGenerated >= now(-1h) 
+    | where now() >= StartTime_t and now() <= EndTime_t
 ) on Computer 
 | where MaintenanceType_s == ""
 
